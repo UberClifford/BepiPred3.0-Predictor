@@ -16,7 +16,7 @@ or
 ```bash
 $ conda env create -f  UNIXOSEnvironment.yml
 ```
-They are 5,89 and x GB in size respectively.  
+They are 5,89 and 5.3G GB in size respectively.  
 
 NOTE: Comes with a pytorch installment of the CUDA 11.3 toolkit, which may not be compatible with your GPU.
 If not, you need to install pytorch with the appropriate toolkit. The virtual environment does not come with a jupyter notebook installment and will only work bepipred3_CLI.py. So if you want this functionality you'll need to install it in the virtual  environment.
