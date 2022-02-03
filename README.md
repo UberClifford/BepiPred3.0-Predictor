@@ -12,10 +12,8 @@ Reconstruct virtual anaconda environmnet from .yml on Windows OS or UNIX OS
 ```bash
 $ conda env create -f WindowsOSEnvironment.yml
 ```
-```bash
-
 or
-
+```bash
 $ conda env create -f  UNIXOSEnvironment.yml
 ```
 They are 5,89 and x GB in size respectively.  
