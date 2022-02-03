@@ -22,6 +22,8 @@ NOTE: Comes with a pytorch installment of the CUDA 11.3 toolkit, which may not b
 If not, you need to install pytorch with the appropriate toolkit. The virtual environment does not come with a jupyter notebook installment and will only work bepipred3_CLI.py. So if you want this functionality you'll need to install it in the virtual  environment.
 The ESM1-b transformer as it is quite large (7.65 GB), but it will be downloaded locally the first time BepiPred3.0-Predictor is run. 
 
+Also, if you run are running this on an Ubuntu WLS, you may run into memory issues when running the ESM-1b encoder. In this case, you'll simply get error message 'Killed'.
+
 ### Using commandline script 
 A commandline script for most general use cases is provided. It takes a fasta file as input and outputs a fasta file containing B-cell epitope predictions. Output looks something like this,
 ```bash
