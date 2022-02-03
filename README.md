@@ -1,6 +1,6 @@
 # BepiPred3.0-Predictor
 BepiPred3.0 predicts B-cell epitopes from ESM1-b encodings of proteins sequences. 
-The ESM-1b transformer is intergrated in this repository, so no create this separately. 
+The ESM-1b transformer is intergrated in this repository, so no need to create this separately. 
 ## Usage
 
 ### Setting up virtual environment
