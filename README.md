@@ -34,11 +34,11 @@ An example of a command from bash command line
 python bepipred3_CLI.py -i ./example_antigens/antigens.fasta -o ./example_output/ -pred vt_pred -t 0.17
 ```
 This will ESM-1b encode sequences antigens.fasta, make B-cell epitope predictions at a threshold of 0.17, and store it as a fasta file in example_output.
+Two ensemble models are provided, one that only uses positional ESM-1b encoding and one that also includes the sequence lengths. 
 
 For more info, you can run
 ```bash
 python bepipred3_CLI.py -h
 ```
-
 ### Creating your own setup 
 You can also use bepipred3 in a more customized fashion and directly access ESM1-b encodings, model outputs etc. This is illustrated in DemoNoteBook.ipynb. 
