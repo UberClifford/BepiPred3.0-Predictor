@@ -1,5 +1,6 @@
 ### IMPORTS ###
 import math
+import subprocess
 import numpy as np
 import torch
 import torch.nn as nn
@@ -9,7 +10,7 @@ import sys
 ### STATIC PATHS ###
 ROOT_DIR = Path( Path(__file__).parent.resolve() )
 MODELS_PATH = ROOT_DIR / "BP3Models"
-from BP3.ESM1b import ESM1b_main
+ESM_SCRIPT_PATH = ROOT_DIR / "extract.py"
 
 ### SET GPU OR CPU ###
 if torch.cuda.is_available():
@@ -105,7 +106,7 @@ class MyDenseNet(nn.Module):
 
 class Antigens():
     def __init__(self, fasta_file, esm1b_encoding_dir,
-        add_seq_len=True):
+        add_seq_len=False):
         """
         Initialize Antigens class object
         Inputs:
@@ -119,14 +120,16 @@ class Antigens():
         except FileExistsError:
             print("Directory for ESM1b encodings already there. Saving encodings there.")
         else:
-            print("Directory for ESM1b encodings not found. Made new one. ")
+            print("Directory for ESM1b encodings not found. Made new one.")
 
         self.accs, self.seqs = self.read_accs_and_sequences_from_fasta(fasta_file)
         num_of_seqs = len(self.seqs)
-        self.create_fasta_for_ESM1_transformer()
+        self.create_fasta_for_ESM1b_transformer()
         print(f"Number of sequences detected in fasta file: {num_of_seqs}")
         print("ESM-1b encoding sequences...")
-        ESM1b_main.ESM1b_encode_fasta_file(self.esm1b_encoding_dir)
+        #call ESM-1b transformer script here!
+        self.call_esm1b_script()
+#        ESM1b_main.ESM1b_encode_fasta_file(self.esm1b_encoding_dir)
         self.add_seq_len = add_seq_len
         self.esm1b_encodings = self.prepare_ESM_1b_data()
         self.ensemble_preds = None
@@ -144,10 +147,13 @@ class Antigens():
             if not check:
                 sys.exit(f"Nonstandard amino acid character detected in acc: {acc}. Allowed character lower and uppercase amino acids:\n{accepted_AAs}")
 
-    def create_fasta_for_ESM1_transformer(self):
+    def call_esm1b_script(self):
+    	fastaPath = self.esm1b_encoding_dir / "antigens.fasta"
+    	subprocess.call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok"])
+
+    def create_fasta_for_ESM1b_transformer(self):
         """
-        Inputs: lists() of same length. Accs and sequences.
-        Outputs: 
+        Outputs fasta file accesions and sequences into a fasta file format, that can be read by ESM-1b transformer.  
         """
         uppercase_entries = list()
         #convert all sequences to uppercase
@@ -210,6 +216,7 @@ class Antigens():
         if accs == False or sequences == False:
             sys.exit(f"No accessions or sequences found in fasta file. Please check file: {infile}")
 
+        #check if there are characters that are not accepted by the ESM-1b transformer.
         self.check_accepted_AAs(accs, sequences)
 
         return accs, sequences
