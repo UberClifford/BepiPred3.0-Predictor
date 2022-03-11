@@ -149,7 +149,7 @@ class Antigens():
 
     def call_esm1b_script(self):
     	fastaPath = self.esm1b_encoding_dir / "antigens.fasta"
-    	subprocess.call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok"])
+    	subprocess.call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
 
     def create_fasta_for_ESM1b_transformer(self):
         """
@@ -362,7 +362,11 @@ class BP3EnsemblePredict():
                 num_residues = len(seq)
                 avg_prob = torch.mean(torch.stack(ensemble_prob, axis=1), axis=1)
                 ensemble_pred = [1 if res >= var_threshold else 0 for res in avg_prob]
-                
+
+                ensemble_pred_len = len(ensemble_pred)
+                if len(ensemble_pred) < num_residues:
+                    print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
+
                 epitope_preds = "".join(["E" if pred == 1 else "-" for pred in ensemble_pred])
                 outfile_content += f">{acc}\n{seq}\n{epitope_preds}\n"
                 ensemble_preds.append(ensemble_pred)
@@ -408,8 +412,12 @@ class BP3EnsemblePredict():
                     
                 #ensemble majority vote 
                 ensemble_pred = np.asarray(all_model_preds)
-                ensemble_pred = [np.argmax( np.bincount(ensemble_pred[:, i]) ) for i in range(num_residues)]
+                ensemble_pred_len = np.shape(ensemble_pred)[1]
+
+                if ensemble_pred_len < num_residues:
+                    print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
                 
+                ensemble_pred = [np.argmax( np.bincount(ensemble_pred[:, i]) ) for i in range(ensemble_pred_len)]
                 epitope_preds = "".join(["E" if pred == 1 else "-" for pred in ensemble_pred])
                 outfile_content += f">{acc}\n{seq}\n{epitope_preds}\n"
                 ensemble_preds.append(ensemble_pred)
