@@ -12,7 +12,7 @@ parser.add_argument("-pred", action="store", choices=["mjv_pred", "vt_pred"], re
 	variable threshold predicition on average ensemble posistive probabilities. ")
 parser.add_argument("-add_seq_len", action="store_true", dest="add_seq_len", help="Add sequence lengths to esm1b-encodings. Default is false.")
 parser.add_argument("-esm1b_dir", action="store", default= WORK_DIR / "esm1b_encodings", dest="esm1b_dir", type=Path, help="Directory to save ESM1b encodings to. Default is current working directory.")
-parser.add_argument("-t", action="store", default=0.15, dest="var_threshold", help="Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.15.")
+parser.add_argument("-t", action="store", default=0.15, type=float, dest="var_threshold", help="Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.15.")
 
 args = parser.parse_args()
 fasta_file = args.fasta_file
