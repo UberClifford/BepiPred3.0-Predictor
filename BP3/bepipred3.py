@@ -3,6 +3,7 @@ import math
 import subprocess
 import numpy as np
 import torch
+import csv
 import torch.nn as nn
 from pathlib import Path
 import sys
@@ -148,8 +149,8 @@ class Antigens():
                 sys.exit(f"Nonstandard amino acid character detected in acc: {acc}. Allowed character lower and uppercase amino acids:\n{accepted_AAs}")
 
     def call_esm1b_script(self):
-    	fastaPath = self.esm1b_encoding_dir / "antigens.fasta"
-    	subprocess.call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
+        fastaPath = self.esm1b_encoding_dir / "antigens.fasta"
+        subprocess.call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
 
     def create_fasta_for_ESM1b_transformer(self):
         """
@@ -335,6 +336,50 @@ class BP3EnsemblePredict():
         
         self.bp3_ensemble_run = True
         antigens.ensemble_probs = ensemble_probs
+
+
+    def raw_ouput_and_top_epitope_candidates(self, antigens, outfile_path, nr_top_cands):
+        try:
+            outfile_path.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            print("Directory B-cell epitope predictions already there. Saving results there.")
+
+        if not self.bp3_ensemble_run:
+            sys.exit("BP3 ensemble has not been run, so predictions cannot be made.\
+                Use method run_bp3_ensemble(antigens).")
+        else:
+            data = list( zip(antigens.accs, antigens.seqs, antigens.ensemble_probs) )
+            combined_csv_format = str()
+            outfile_content = str()
+            combined_csv_format += "Accession,Residue,BepiPred-3.0 score"
+
+            for acc, seq, ensemble_prob in data:
+                num_residues  = len(seq)
+                avg_prob = torch.mean(torch.stack(ensemble_prob, axis=1), axis=1)
+                ensemble_pred_len = len(avg_prob)
+
+                if ensemble_pred_len < num_residues:
+                    print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
+
+                csv_format = [f"{acc},{seq[i]},{avg_prob[i]}" for i in range(ensemble_pred_len)]
+                csv_format = "\n".join(csv_format)
+                combined_csv_format += f"\n{csv_format}"
+
+                #get top predictions
+                top_preds =[res_idx for res_idx, _ in sorted( [(idx, p) for idx, p in enumerate(avg_prob)], key=lambda pair: pair[1],  reverse=True)][:nr_top_cands]
+                
+                epitope_preds = "".join([seq[i].upper() if i in top_preds else seq[i].lower() for i in range(ensemble_pred_len)])
+                outfile_content += f">{acc}\n{epitope_preds}\n"
+
+            #write raw csv file
+            with open(outfile_path  / "raw_output.csv", "w") as outfile:
+                outfile.write(combined_csv_format)
+
+            #write top candidates file
+            outfile_content = outfile_content[:-1]
+            #saving output to fasta formatted output file
+            with open(outfile_path  / f"Bcell_epitope_top_{nr_top_cands}_preds.fasta", "w") as outfile:
+                outfile.write(outfile_content)
         
     def bp3_pred_variable_threshold(self,
                               antigens,
@@ -364,11 +409,11 @@ class BP3EnsemblePredict():
                 ensemble_pred = [1 if res >= var_threshold else 0 for res in avg_prob]
 
                 ensemble_pred_len = len(ensemble_pred)
-                if len(ensemble_pred) < num_residues:
+                if ensemble_pred_len < num_residues:
                     print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
 
-                epitope_preds = "".join(["E" if pred == 1 else "-" for pred in ensemble_pred])
-                outfile_content += f">{acc}\n{seq}\n{epitope_preds}\n"
+                epitope_preds = "".join([seq[i].upper() if ensemble_pred[i] == 1 else seq[i].lower() for i in range( ensemble_pred_len )])
+                outfile_content += f">{acc}\n{epitope_preds}\n"
                 ensemble_preds.append(ensemble_pred)
             
             antigens.ensemble_preds = ensemble_preds
@@ -418,8 +463,10 @@ class BP3EnsemblePredict():
                     print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
                 
                 ensemble_pred = [np.argmax( np.bincount(ensemble_pred[:, i]) ) for i in range(ensemble_pred_len)]
-                epitope_preds = "".join(["E" if pred == 1 else "-" for pred in ensemble_pred])
-                outfile_content += f">{acc}\n{seq}\n{epitope_preds}\n"
+                epitope_preds = "".join([seq[i].upper() if ensemble_pred[i] == 1 else seq[i].lower() for i in range( len(ensemble_pred) )])
+#                epitope_preds = "".join(["E" if pred == 1 else "-" for pred in ensemble_pred])
+ #               outfile_content += f">{acc}\n{seq}\n{epitope_preds}\n"
+                outfile_content += f">{acc}\n{epitope_preds}\n"
                 ensemble_preds.append(ensemble_pred)
             
             antigens.ensemble_preds = ensemble_preds
