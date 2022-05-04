@@ -1,5 +1,5 @@
 ### IMPORTS AND STATIC PATHS ###
-from BP3 import bepipred3
+from bp3 import bepipred3
 from pathlib import Path
 import argparse
 
@@ -28,8 +28,8 @@ top_cands = args.top_cands
 ### MAIN ###
 
 ## Load antigen input and create ESM-1b encodings ## 
-MyAntigens = bepipred3.Antigens(fasta_file, esm1b_dir, add_seq_len=add_seq_len)
-MyBP3EnsemblePredict = bepipred3.BP3EnsemblePredict(MyAntigens)
+MyAntigens =  bepipred3.Antigens(fasta_file, esm1b_dir, add_seq_len=add_seq_len)
+MyBP3EnsemblePredict =  bepipred3.BP3EnsemblePredict(MyAntigens)
 MyBP3EnsemblePredict.run_bp3_ensemble(MyAntigens)
 
 MyBP3EnsemblePredict.raw_ouput_and_top_epitope_candidates(MyAntigens, out_dir, top_cands)

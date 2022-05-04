@@ -30,5 +30,64 @@ dependencies:
   - wheel=0.37.1=pyhd3eb1b0_0
   - wincertstore=0.2=py39haa95532_2
   - pip:
+    - aenum==2.2.6
+    - alabaster==0.7.12
+    - appdirs==1.4.4
+    - babel==2.10.1
+    - bp3==0.0.1
+    - cbor2==5.2.0
+    - cffi==1.15.0
+    - charset-normalizer==2.0.12
+    - click==8.1.3
+    - colorama==0.4.4
+    - cose==0.9.dev2
+    - cryptography==36.0.1
+    - docker==4.4.1
+    - docutils==0.17.1
+    - ecdsa==0.17.0
     - fair-esm==0.4.0
+    - flask==2.0.1
+    - flask-cors==3.0.10
+    - gunicorn==20.1.0
+    - idna==3.3
+    - imagesize==1.3.0
+    - importlib-metadata==4.11.3
+    - importlib-resources==5.7.1
+    - itsdangerous==2.1.2
+    - jinja2==3.1.2
+    - markupsafe==2.1.1
+    - nest-asyncio==1.5.1
+    - ordered-set==4.1.0
+    - packaging==21.3
+    - pybiolib==1.0.1748
+    - pycparser==2.21
+    - pycryptodome==3.9.9
+    - pyee==7.0.4
+    - pygments==2.12.0
+    - pyjwt==2.3.0
+    - pyopenssl==19.1.0
+    - pyparsing==3.0.8
+    - pytz==2022.1
+    - pywin32==227
+    - pyyaml==6.0
+    - requests==2.27.1
+    - semver==2.13.0
+    - snowballstemmer==2.2.0
+    - sphinx==4.5.0
+    - sphinx-rtd-theme==1.0.0
+    - sphinxcontrib-applehelp==1.0.2
+    - sphinxcontrib-devhelp==1.0.2
+    - sphinxcontrib-htmlhelp==2.0.0
+    - sphinxcontrib-jsmath==1.0.1
+    - sphinxcontrib-qthelp==1.0.3
+    - sphinxcontrib-serializinghtml==1.1.5
+    - sphinxemoji==0.2.0
+    - spython==0.2.1
+    - termcolor==1.1.0
+    - tqdm==4.64.0
+    - urllib3==1.26.9
+    - websocket-client==1.3.2
+    - websockets==10.3
+    - werkzeug==2.1.2
+    - zipp==3.8.0
 prefix: C:\Users\Joaki\anaconda3\envs\bepipred3

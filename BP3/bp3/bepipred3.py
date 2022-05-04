@@ -150,7 +150,12 @@ class Antigens():
 
     def call_esm1b_script(self):
         fastaPath = self.esm1b_encoding_dir / "antigens.fasta"
-        subprocess.call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
+        
+        try:
+            subprocess.check_call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
+        except subprocess.CalledProcessError as error:
+            sys.exit(f"ESM-1b model could not be run with following error message: {error}.\nThis is likely a memory issue.")
+
 
     def create_fasta_for_ESM1b_transformer(self):
         """
