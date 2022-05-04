@@ -27,7 +27,6 @@ A commandline script for most general use cases is provided. It takes a fasta fi
 ```bash
 >7lj4_B
 ...QQaQRELK..
-...EE-EEEEE...
 ```
 An example of a command from bash command line
 ```bash
