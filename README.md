@@ -20,20 +20,18 @@ They are 5,89 and 5.3G GB in size respectively.
 
 NOTE: Comes with a pytorch installment of the CUDA 11.3 toolkit, which may not be compatible with your GPU.
 If not, you need to install pytorch with the appropriate toolkit. The virtual environment does not come with a jupyter notebook installment and will only work bepipred3_CLI.py. So if you want this functionality you'll need to install it in the virtual  environment.
-The ESM1-b transformer as it is quite large (7.65 GB), but it will be downloaded locally through torch hub the first time BepiPred3.0-Predictor is run. 
-
-Also, if you run are running this on an Ubuntu WLS, you may run into memory issues when running the ESM-1b encoder. In this case, you'll simply get error message 'Killed'.
+Also, you may run into memory issues when running the ESM-1b encoder. 
 
 ### Using commandline script 
-A commandline script for most general use cases is provided. It takes a fasta file as input and outputs a fasta file containing B-cell epitope predictions. Output looks something like this,
+A commandline script for most general use cases is provided. It takes a fasta file as input and outputs a fasta file containing B-cell epitope predictions. Output looks something like this, (capitilization=predicted epitope residue)
 ```bash
 >7lj4_B
-...QQAQRELK..
+...QQaQRELK..
 ...EE-EEEEE...
 ```
 An example of a command from bash command line
 ```bash
-python bepipred3_CLI.py -i ./example_antigens/antigens.fasta -o ./example_output/ -pred vt_pred -t 0.17
+python bepipred3_CLI.py -i ./example_antigens/antigens.fasta -o ./example_output/ -pred vt_pred -t 0.17 
 ```
 This will ESM-1b encode sequences antigens.fasta, make B-cell epitope predictions at a threshold of 0.17, and store it as a fasta file in example_output.
 Two ensemble models are provided, one that only uses positional ESM-1b encoding and one that also includes the sequence lengths. 
