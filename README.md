@@ -16,7 +16,7 @@ or
 ```bash
 $ conda env create -f  UNIXOSEnvironment.yml
 ```
-They are 5,89 and 5.3G GB in size respectively.  
+They are 5,89 and 5.3G GB in size respectively. The environment contains the ESM-1b pip package as well a bepipred3 pip package.  
 
 NOTE: Comes with a pytorch installment of the CUDA 11.3 toolkit, which may not be compatible with your GPU.
 If not, you need to install pytorch with the appropriate toolkit. The virtual environment does not come with a jupyter notebook installment and will only work bepipred3_CLI.py. So if you want this functionality you'll need to install it in the virtual  environment.
@@ -34,6 +34,8 @@ python bepipred3_CLI.py -i ./example_antigens/antigens.fasta -o ./example_output
 ```
 This will ESM-1b encode sequences antigens.fasta, make B-cell epitope predictions at a threshold of 0.17, and store it as a fasta file in example_output.
 Two ensemble models are provided, one that only uses positional ESM-1b encoding and one that also includes the sequence lengths. 
+The average ensemble probability scores are also outputted in  raw_output.CSV file.
+Also a fasta file with top x epitope candidate residues is outputted (by default top 10)
 
 For more info, you can run
 ```bash
