@@ -1,10 +1,8 @@
 # BepiPred3.0-Predictor
 BepiPred3.0 predicts B-cell epitopes from ESM1-b encodings of proteins sequences. 
-The ESM-1b transformer is intergrated in this repository, so no need to create this separately. 
 ## Usage
-
-### Setting up virtual environment
-The dependencies for the BepiPred-3.0 are listed in requirements.txt. These dependencies can be installed with pip. 
+### Set up
+The dependencies for the BepiPred-3.0 are listed in requirements.txt. These dependencies can be installed with pip. We used a python version 3.8.8. Other python versions may or may not be compatable with the packages listed in requirements.txt. It is recommended that you install the dependencies in a virtual environment. 
 ```bash
 $ pip3 install -r requirements.txt
 ```
