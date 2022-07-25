@@ -1,2 +1,5 @@
 **/.ipynb_checkpoints/
 **/__pycache__/
+**/esm1b_encodings/
+**/esm_model_state_dict.pt
+misc/biolib_bepipred3/esm1b_encodings/

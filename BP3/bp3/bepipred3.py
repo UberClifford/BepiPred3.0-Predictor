@@ -7,11 +7,16 @@ import csv
 import torch.nn as nn
 from pathlib import Path
 import sys
+import plotly.express as px
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+import pandas as pd
 
 ### STATIC PATHS ###
 ROOT_DIR = Path( Path(__file__).parent.resolve() )
 MODELS_PATH = ROOT_DIR / "BP3Models"
 ESM_SCRIPT_PATH = ROOT_DIR / "extract.py"
+ESM_LOCAL_SCRIPT_PATH = ROOT_DIR / "extract_local.py"
 
 ### SET GPU OR CPU ###
 if torch.cuda.is_available():
@@ -107,7 +112,7 @@ class MyDenseNet(nn.Module):
 
 class Antigens():
     def __init__(self, fasta_file, esm1b_encoding_dir,
-        add_seq_len=False):
+        add_seq_len=False, run_esm_model_local=None):
         """
         Initialize Antigens class object
         Inputs:
@@ -115,6 +120,7 @@ class Antigens():
         """
 
         self.esm1b_encoding_dir = esm1b_encoding_dir
+        self.run_esm_model_local = run_esm_model_local
 
         try:
             esm1b_encoding_dir.mkdir(parents=True, exist_ok=False)
@@ -151,8 +157,14 @@ class Antigens():
     def call_esm1b_script(self):
         fastaPath = self.esm1b_encoding_dir / "antigens.fasta"
         
-        try:
-            subprocess.check_call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
+        try: #only using this for biolib implementation 
+            if self.run_esm_model_local is not None:
+                if self.run_esm_model_local.is_file():
+                    subprocess.check_call(['python', ESM_LOCAL_SCRIPT_PATH, self.run_esm_model_local, fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
+                else:
+                    sys.exit(f"Could not find local model: {self.run_esm_model_local}.")
+            else:
+                subprocess.check_call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
         except subprocess.CalledProcessError as error:
             sys.exit(f"ESM-1b model could not be run with following error message: {error}.\nThis is likely a memory issue.")
 
@@ -272,6 +284,7 @@ class BP3EnsemblePredict():
         """
         
         self.bp3_ensemble_run = False
+        self.antigens = antigens
         
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -304,7 +317,7 @@ class BP3EnsemblePredict():
         if classification_thresholds != None:
             self.classification_thresholds = classification_thresholds
 
-    def run_bp3_ensemble(self, antigens):
+    def run_bp3_ensemble(self):
         """
         INPUTS: antigens: Antigens() class object.  
         
@@ -312,13 +325,12 @@ class BP3EnsemblePredict():
                 No outputs. Stores probabilities of ensemble models in Antigens() class object.
                 Run bp3_pred_variable_threshold() or bp3_pred_majority_vote() afterwards to make predictions. 
         """
-        
         num_of_models = len(self.model_states)
         ensemble_probs = list()
         threshold_keys = list()
         softmax_function = nn.Softmax(dim=1)
         model = self.model_architecture
-        data = list( zip(antigens.accs, antigens.seqs, antigens.esm1b_encodings) )
+        data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.esm1b_encodings) )
             
         for acc, seq, esm1b_encoding in data:
             ensemble_prob = list()
@@ -330,7 +342,7 @@ class BP3EnsemblePredict():
                 with torch.no_grad():
                 
                     model_state = self.model_states[i] 
-                    model.load_state_dict(torch.load(model_state))
+                    model.load_state_dict(torch.load(model_state, map_location=self.device))
                     model = model.to(self.device)
                     model.eval()
                     model_output = model(esm1b_encoding)
@@ -340,10 +352,10 @@ class BP3EnsemblePredict():
             ensemble_probs.append(ensemble_prob)
         
         self.bp3_ensemble_run = True
-        antigens.ensemble_probs = ensemble_probs
+        self.antigens.ensemble_probs = ensemble_probs
 
 
-    def raw_ouput_and_top_epitope_candidates(self, antigens, outfile_path, nr_top_cands):
+    def raw_ouput_and_top_epitope_candidates(self, outfile_path, nr_top_cands=15):
         try:
             outfile_path.mkdir(parents=True, exist_ok=False)
         except FileExistsError:
@@ -353,7 +365,8 @@ class BP3EnsemblePredict():
             sys.exit("BP3 ensemble has not been run, so predictions cannot be made.\
                 Use method run_bp3_ensemble(antigens).")
         else:
-            data = list( zip(antigens.accs, antigens.seqs, antigens.ensemble_probs) )
+            antigens = self.antigens
+            data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.ensemble_probs) )
             combined_csv_format = str()
             outfile_content = str()
             combined_csv_format += "Accession,Residue,BepiPred-3.0 score"
@@ -386,10 +399,7 @@ class BP3EnsemblePredict():
             with open(outfile_path  / f"Bcell_epitope_top_{nr_top_cands}_preds.fasta", "w") as outfile:
                 outfile.write(outfile_content)
         
-    def bp3_pred_variable_threshold(self,
-                              antigens,
-                              outfile_path,
-                              var_threshold = 0.15):
+    def bp3_pred_variable_threshold(self, outfile_path, var_threshold = 0.1512):
         
         try:
             outfile_path.mkdir(parents=True, exist_ok=False)
@@ -402,7 +412,7 @@ class BP3EnsemblePredict():
             sys.exit("BP3 ensemble has not been run, so predictions cannot be made.\
  Use method run_bp3_ensemble(antigens).")
         else:
-            data = list( zip(antigens.accs, antigens.seqs, antigens.ensemble_probs) )
+            data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.ensemble_probs) )
             ensemble_preds = list()
             outfile_content = str()
             
@@ -421,15 +431,13 @@ class BP3EnsemblePredict():
                 outfile_content += f">{acc}\n{epitope_preds}\n"
                 ensemble_preds.append(ensemble_pred)
             
-            antigens.ensemble_preds = ensemble_preds
+            self.antigens.ensemble_preds = ensemble_preds
             outfile_content = outfile_content[:-1]
             #saving output to fasta formatted output file
             with open(outfile_path  / "Bcell_epitope_preds.fasta", "w") as outfile:
                 outfile.write(outfile_content)
             
-    def bp3_pred_majority_vote(self,
-                               antigens,
-                               outfile_path):
+    def bp3_pred_majority_vote(self, outfile_path):
         """
         
         """
@@ -444,7 +452,7 @@ class BP3EnsemblePredict():
             sys.exit("BP3 ensemble has not been run, so predictions cannot be made.\
  Use method run_bp3_ensemble(antigens).")
         else:
-            data = list( zip(antigens.accs, antigens.seqs, antigens.ensemble_probs) )
+            data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.ensemble_probs) )
             ensemble_preds = list()
             outfile_content = str()
             
@@ -474,8 +482,214 @@ class BP3EnsemblePredict():
                 outfile_content += f">{acc}\n{epitope_preds}\n"
                 ensemble_preds.append(ensemble_pred)
             
-            antigens.ensemble_preds = ensemble_preds
+            self.antigens.ensemble_preds = ensemble_preds
             outfile_content = outfile_content[:-1]
             #saving output to fasta formatted output file
             with open(outfile_path / "Bcell_epitope_preds.fasta", "w") as outfile:
                 outfile.write(outfile_content)
+
+
+    def add_line_breaks(self, seq, every_x_line = 128):
+        seq_len = len(seq)
+        line_breaks = seq_len / every_x_line
+    
+        if line_breaks < 1:
+            parsed_seq = seq
+        else:
+            num_line_breaks = int(math.floor(line_breaks))        
+            line_break_at_chars = [every_x_line*i for i in range(1, num_line_breaks + 1)]
+    
+            for i in range(len(line_break_at_chars)):
+                #+4 because <br> is 4 chars
+                seq = seq[:line_break_at_chars[i]+i*4]+"<br>"+seq[line_break_at_chars[i]+i*4:]
+    
+            parsed_seq = seq
+    
+        return parsed_seq
+    
+    def filter_thresholds(self, residues, thresholds, ensemble_pred_len, avg_prob):
+        """
+        function for filtering out thresholds, which dont change the prediction. 
+        This is an optimization, so that a lot fewer frames are used per plotly plot.
+        """
+        nr_thresholds = len(thresholds)
+        prev_pred = "".join([residues[i].upper() if avg_prob[i] >= thresholds[0] else residues[i].lower() for i in range(ensemble_pred_len )])
+        filtered_thresholds = list()
+        filtered_thresholds.append(thresholds[0])
+        for i in range(1, nr_thresholds):
+            t = thresholds[i]
+            current_pred = "".join([residues[i].upper() if avg_prob[i] >= t else residues[i].lower() for i in range(ensemble_pred_len)])
+            if current_pred != prev_pred:
+                filtered_thresholds.append(t)
+                prev_pred = current_pred
+            else:
+                pass
+    
+        return filtered_thresholds
+    
+    def insert_into_html(self, pattern, html_file_content, what_to_insert):
+        """
+        For inserting java code into html file 
+        """
+        
+        search_from = 0
+        idx_to_insert_at = 0
+        while idx_to_insert_at != -1:
+    
+            idx_to_insert_at = html_file_content.find(pattern, search_from + 1)
+            if idx_to_insert_at != -1:
+                html_file_content = html_file_content[:idx_to_insert_at] + what_to_insert + html_file_content[idx_to_insert_at:]
+                search_from = idx_to_insert_at+len(what_to_insert)
+    
+        return html_file_content
+    
+    
+    def bp3_generate_plots(self, outfile_path, var_threshold=0.1512, num_interactive_figs=30):
+        try:
+            outfile_path.mkdir(parents=True, exist_ok=False)
+        except FileExistsError:
+            print("Directory for saving plots already there. Saving results there.")
+        else:
+            print("Directory for saving plots not found. Made new one. ")
+        
+        if not self.bp3_ensemble_run:
+            sys.exit("BP3 ensemble has not been run, so predictions cannot be made.\
+ Use method run_bp3_ensemble(antigens).")
+        else:
+            #thresholds to initially test
+            nr_thresholds = 400
+            #line split on text box
+            every_x_line = 128
+            thresholds = np.round(np.linspace(0, 1, nr_thresholds), decimals=5)
+            y_init = [var_threshold, var_threshold]
+            interactive_figure_list = list()
+            data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.ensemble_probs) )
+
+
+            print("Creating figures")
+            for acc, seq, ensemble_prob in data:
+                epitope_preds_at_diff_thresh = list()
+                seq_len  = len(seq)
+                avg_prob = np.round(torch.mean(torch.stack(ensemble_prob, axis=1), axis=1).cpu().detach().numpy(), decimals=5)
+                ensemble_pred_len = len(avg_prob)
+                res_counts = [i for i in range(1, ensemble_pred_len + 1)]
+                residues =  [seq[i] for i in range(ensemble_pred_len)]
+                acc_col = [acc for i in range(ensemble_pred_len)]
+            
+                #quick solution for for setting some figure update height according sequence length (number of line breaks in text box)
+                line_breaks = ensemble_pred_len  / every_x_line
+                num_line_breaks = int(math.floor(line_breaks))
+                if num_line_breaks <= 1:
+                    figure_height_update = 200
+                    y_coord = -0.37
+                else:
+                    figure_height_update = 200 + num_line_breaks*8
+                    y_coord = -0.37 - 0.05*num_line_breaks
+            
+                d = {"BP3EpiProbScore": avg_prob, "Residue": residues, "SeqPos": res_counts, "Accession": acc_col}
+                df = pd.DataFrame(data=d)
+                df.round({"BP3EpiProbScore":5})
+            
+                # filter only useful thresholds (where prediction changes)
+                filtered_thresholds = self.filter_thresholds(residues, thresholds, ensemble_pred_len, avg_prob)
+                thresholds_to_plot = [[t,t] for t in filtered_thresholds]
+                first_indice_above= np.argwhere(thresholds>=var_threshold)[0][0]
+                thresholds_to_plot = thresholds_to_plot[:first_indice_above] + [[var_threshold, var_threshold]] + thresholds_to_plot[first_indice_above:]
+                #1. Go through each threshold
+                #2. Make prediction based on threshold.
+                #3. If prediction changes, keep threshold. else throw it away.
+            
+                for t in filtered_thresholds:
+                    epitope_preds_at_diff_thresh.append(f"{acc} (A/a=Epitope/Non-epitope), Threshold: {t}<br>"+self.add_line_breaks("".join([residues[i].upper() if avg_prob[i] >= t else residues[i].lower() for i in range(ensemble_pred_len )])))
+            
+                x_data = [1, ensemble_pred_len]
+            
+                init_threshold_epitope_preds = f"{acc} (A/a=Epitope/Non-epitope), Threshold: {var_threshold}<br>"+self.add_line_breaks("".join([residues[i].upper() if avg_prob[i] >= var_threshold else residues[i].lower() for i in range(ensemble_pred_len )]))
+                epitope_preds_at_diff_thresh = epitope_preds_at_diff_thresh[:first_indice_above] + [init_threshold_epitope_preds] + epitope_preds_at_diff_thresh[first_indice_above:]
+            
+                #create initial figure
+                fig = go.Figure()
+                bar_fig = px.bar(df, x="SeqPos", y="BP3EpiProbScore", hover_data=["Residue", "Accession"], title= f"BepiPred-3.0 epitope scores on {acc}", color="BP3EpiProbScore", labels={'BP3EpiProbScore':'BepiPred-3.0 epitope score', "SeqPos": "Sequence position"}, height=700)
+                stored_coloraxis_info = bar_fig.layout.coloraxis
+                fig.add_trace(bar_fig.data[0])
+                fig.add_trace(go.Scatter(x=x_data, y=y_init, mode="lines", line_color="#2C596A", line={"dash":"dash"}, showlegend=False))
+                fig.add_annotation(text=f"<b>{init_threshold_epitope_preds}</b>", align='left', showarrow=False, xref='paper', yref='paper', x=0.0, y=y_coord, bgcolor="#F9C68F", font_family='Courier New, monospace', bordercolor = "#2C596A")
+                fig.update_layout(margin=dict(b=figure_height_update), title=f"BepiPred-3.0 epitope scores on {acc}", xaxis_title="Sequence position", yaxis_title="BepiPred-3.0 epitope score", coloraxis = stored_coloraxis_info, height=700)
+                
+                #only create x number of interactive figures due file size constraints.
+                if len(interactive_figure_list) < num_interactive_figs:
+                    #get frames for threshold animated figure
+                    frames = []
+                    for i in range(len(filtered_thresholds)):
+                        layout_i = go.Layout(annotations=[go.layout.Annotation(text=f"<b>{epitope_preds_at_diff_thresh[i]}</b>", align='left', showarrow=False, xref='paper', yref='paper', x=0.0, y=y_coord, bgcolor="#F9C68F", font_family='Courier New, monospace', bordercolor = "#2C596A")])
+                
+                        frames.append(go.Frame(name=str(i), data=[go.Scatter(x=x_data, y=thresholds_to_plot[i], mode="lines", line_color="#2C596A", line={"dash":"dash"}, showlegend=False), bar_fig.update_traces().data[0],], layout=layout_i))
+                    
+                    #update figure with all the frames
+                    figa = go.Figure(data=fig.data, frames=frames, layout=fig.layout)
+                    #create threshold sliders
+                    figa.update_layout(height=700, title=f"BepiPred-3.0 epitope scores on {acc}", xaxis_title="Sequence position", yaxis_title="BepiPred-3.0 epitope score", coloraxis = stored_coloraxis_info)
+                    figa.update_layout(
+                        sliders=[
+                            {
+                                "active": 0,
+                                "currentvalue": {"xanchor":"left", "prefix": "<b>Threshold: </b>", "font": {"color":"#2C596A"}},
+                                "len": 0.9,
+                                "tickcolor": "#2C596A",
+                                "font": {"color": "#2C596A"},
+                                "steps": [      
+                                    {
+                                        "args": [
+                                            [figa.frames[i].name],
+                                            {
+                                                "frame": {"duration": 0, "redraw": True},
+                                                "mode": "immediate",
+                                                "fromcurrent": True,
+                                                "font": {"color":"white"}
+                                            },
+                                        ],
+                                        "label": filtered_thresholds[i],
+                                        "method": "animate",
+                                    }
+                                    for i in range(len(figa.frames))
+                                ],
+                            }
+                        ],
+                    )
+                    interactive_figure_list.append(figa)
+            
+            #write interactive plots
+            with open(outfile_path / "output_interactive_figures.html", 'w') as f:
+                for figure in interactive_figure_list:
+                    f.write(figure.to_html(full_html=False, include_plotlyjs='cdn', auto_play=False))
+            
+            ## Manually insert some custom java code ##
+            
+            #download B-cell epitope predictions button button
+            #insert line before Plotly.newPlot
+            button_pattern = b"""Plotly.newPlot"""
+            plotly_java_download_button = b"""var config = {
+              modeBarButtonsToAdd: [
+                {
+                  name: 'Download epitope predictions',
+                  icon: Plotly.Icons.disk,
+                  direction: 'up',
+                  click: function(gd){let str = new String(gd.layout.annotations[0].text.toString()); let filename = new String(gd.layout.title.text.toString()).replaceAll(" ", "_"); let seq = ">" + str.replaceAll("<b>", "").replaceAll("</b>", "").replaceAll("<br>", "\\n"); let blob = new Blob([seq], {type: "text/plain"}); let link = document.createElement("a"); let url = URL.createObjectURL(blob); link.setAttribute("href", url); link.setAttribute("download", filename + ".fasta"); link.style.visibility = 'hidden'; document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                }}],}\n"""
+            
+            #set download button in config 
+            #insert before {"responsive": true}  
+            config_pattern = b"""{"responsive": true}"""
+            plotly_config = b"""config, """
+            
+            ## edit interactive html ##
+            
+            with open(outfile_path / "output_interactive_figures.html", "rb") as infile:
+                html_file_content = infile.read()
+            
+            #insert java code
+            new_html_content = self.insert_into_html(button_pattern, html_file_content, plotly_java_download_button)
+            new_html_content = self.insert_into_html(config_pattern, new_html_content, plotly_config)
+            new_html_content = new_html_content.decode("utf-8")
+            with open(outfile_path / "output_interactive_figures.html", "w") as outfile:
+                outfile.write(new_html_content)

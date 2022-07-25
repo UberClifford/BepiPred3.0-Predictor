@@ -13,8 +13,8 @@ parser.add_argument("-pred", action="store", choices=["mjv_pred", "vt_pred"], re
 	variable threshold predicition on average ensemble posistive probabilities. ")
 parser.add_argument("-add_seq_len", action="store_true", dest="add_seq_len", help="Add sequence lengths to esm1b-encodings. Default is false.")
 parser.add_argument("-esm1b_dir", action="store", default= WORK_DIR / "esm1b_encodings", dest="esm1b_dir", type=Path, help="Directory to save ESM1b encodings to. Default is current working directory.")
-parser.add_argument("-t", action="store", default=0.15, type=float, dest="var_threshold", help="Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.15.")
-parser.add_argument("-top", action="store", default=10, type=int, dest="top_cands", help="Number of top candidates to display in top candidate residue output file. Default is 10.")
+parser.add_argument("-t", action="store", default=0.1512, type=float, dest="var_threshold", help="Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.15.")
+parser.add_argument("-top", action="store", default=15, type=int, dest="top_cands", help="Number of top candidates to display in top candidate residue output file. Default is 10.")
 
 args = parser.parse_args()
 fasta_file = args.fasta_file
@@ -28,14 +28,16 @@ top_cands = args.top_cands
 ### MAIN ###
 
 ## Load antigen input and create ESM-1b encodings ## 
-MyAntigens =  bepipred3.Antigens(fasta_file, esm1b_dir, add_seq_len=add_seq_len)
-MyBP3EnsemblePredict =  bepipred3.BP3EnsemblePredict(MyAntigens)
-MyBP3EnsemblePredict.run_bp3_ensemble(MyAntigens)
-
-MyBP3EnsemblePredict.raw_ouput_and_top_epitope_candidates(MyAntigens, out_dir, top_cands)
+MyAntigens = bepipred3.Antigens(fasta_file, esm1b_dir, add_seq_len=add_seq_len)
+MyBP3EnsemblePredict = bepipred3.BP3EnsemblePredict(MyAntigens)
+MyBP3EnsemblePredict.run_bp3_ensemble()
+MyBP3EnsemblePredict.raw_ouput_and_top_epitope_candidates(out_dir, top_cands)
 
 ## B-cell epitope predictions ##
 if pred == "mjv_pred":
-    MyBP3EnsemblePredict.bp3_pred_majority_vote(MyAntigens, out_dir)
+    MyBP3EnsemblePredict.bp3_pred_majority_vote(out_dir)
 elif pred == "vt_pred":
-    MyBP3EnsemblePredict.bp3_pred_variable_threshold(MyAntigens, out_dir, var_threshold=var_threshold)
+    MyBP3EnsemblePredict.bp3_pred_variable_threshold(out_dir, var_threshold=var_threshold)
+
+#generate plots (generating graphs for a maximum of 40 proteins)
+MyBP3EnsemblePredict.bp3_generate_plots(out_dir, num_interactive_figs=40)

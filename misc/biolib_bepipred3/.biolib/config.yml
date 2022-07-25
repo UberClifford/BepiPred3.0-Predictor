@@ -1,0 +1,34 @@
+biolib_version: 2
+
+modules:
+    main:
+        image: 'local-docker://uberclifford/bepipred-3.0-biolib_v15:latest'
+        command: 
+            python3 bepipred3_CLI.py
+        working_directory: /
+        input_files:
+            - COPY / /
+        output_files:
+            - COPY /output_directory/ /
+        source_files: [ ] 
+        gpu: required
+
+arguments:
+    -   default_value: "example_antigens.fasta"
+        description: Insert fasta sequence(s) file
+        key: '-i'
+        key_value_separator: ' '
+        required: true
+        type: file
+    -
+        default_value: 15
+        description: Top epitope residue candidates to display. Default is 15.
+        key: '-top'
+        key_value_separator: ' '
+        type: number
+    -
+        default_value: 0.1512
+        description: Threshold for predicting B-cell epitope residues. Default is 0.1512.
+        key: '-t'
+        key_value_separator: ' '
+        type: number

@@ -1,0 +1,8 @@
+Total docker image size: 6.4 GB
+- ESM-1b model 2.55 GB 
+- nvidia driver docker image 2.61 GB 
+- Remaining: 1.24 GB
+
+DIVE statistics:
+- 99% Image efficiency
+- Estimated wasted diskspace in build setup: 41 MB   
