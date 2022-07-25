@@ -22,6 +22,10 @@ Two ensemble models are provided, one that only uses positional ESM-1b encoding 
 The average ensemble probability scores are also outputted in  raw_output.CSV file.
 Also a fasta file with top x epitope candidate residues is outputted (by default top 10)
 
+![Screenshot](example_interactive_plot.png)	
+In the interface for 'output_interactive_figures.html', the x and y axis are protein sequence positions and BepiPred-3.0 epitope scores. Residues with a higher score are more likely to be part of a B-cell epitope. The threshold can be set by using the slider bar, which moves a dashed line along the y-axis. Epitope predictions are updated accordingly, and B-cell epitope predictions at the set threshold can be downloaded by clicking the button ‘Download epitope prediction’.
+
+
 For more info, you can run
 ```bash
 python bepipred3_CLI.py -h
