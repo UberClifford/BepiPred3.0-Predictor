@@ -568,17 +568,26 @@ class BP3EnsemblePredict():
 
             print("Creating figures")
             for acc, seq, ensemble_prob in data:
+
                 epitope_preds_at_diff_thresh = list()
                 seq_len  = len(seq)
                 avg_prob = np.round(torch.mean(torch.stack(ensemble_prob, axis=1), axis=1).cpu().detach().numpy(), decimals=5)
                 ensemble_pred_len = len(avg_prob)
+
+                if ensemble_pred_len < seq_len:
+                    plot_title = f"BepiPred-3.0 epitope scores on {self.add_line_breaks(acc)}.<br>The sequence was too long and predictions are truncated to the first 1024 residues."
+
+                else:
+                    plot_title = f"BepiPred-3.0 epitope scores on {self.add_line_breaks(acc)}"
+                
                 res_counts = [i for i in range(1, ensemble_pred_len + 1)]
                 residues =  [seq[i] for i in range(ensemble_pred_len)]
                 acc_col = [acc for i in range(ensemble_pred_len)]
             
                 #quick solution for for setting some figure update height according sequence length (number of line breaks in text box)
                 line_breaks = ensemble_pred_len  / every_x_line
-                num_line_breaks = int(math.floor(line_breaks))
+                line_breaks_in_acc = len(acc) / every_x_line
+                num_line_breaks = int(math.floor(line_breaks)) + int(math.floor(line_breaks_in_acc))
                 if num_line_breaks <= 1:
                     figure_height_update = 200
                     y_coord = -0.37
@@ -600,21 +609,21 @@ class BP3EnsemblePredict():
                 #3. If prediction changes, keep threshold. else throw it away.
             
                 for t in filtered_thresholds:
-                    epitope_preds_at_diff_thresh.append(f"{acc} (A/a=Epitope/Non-epitope), Threshold: {t}<br>"+self.add_line_breaks("".join([residues[i].upper() if avg_prob[i] >= t else residues[i].lower() for i in range(ensemble_pred_len )])))
+                    epitope_preds_at_diff_thresh.append(f"{self.add_line_breaks(acc)} (A/a=Epitope/Non-epitope), Threshold: {t}<br>"+self.add_line_breaks("".join([residues[i].upper() if avg_prob[i] >= t else residues[i].lower() for i in range(ensemble_pred_len )])))
             
                 x_data = [1, ensemble_pred_len]
             
-                init_threshold_epitope_preds = f"{acc} (A/a=Epitope/Non-epitope), Threshold: {var_threshold}<br>"+self.add_line_breaks("".join([residues[i].upper() if avg_prob[i] >= var_threshold else residues[i].lower() for i in range(ensemble_pred_len )]))
+                init_threshold_epitope_preds = f"{self.add_line_breaks(acc)} (A/a=Epitope/Non-epitope), Threshold: {var_threshold}<br>"+self.add_line_breaks("".join([residues[i].upper() if avg_prob[i] >= var_threshold else residues[i].lower() for i in range(ensemble_pred_len )]))
                 epitope_preds_at_diff_thresh = epitope_preds_at_diff_thresh[:first_indice_above] + [init_threshold_epitope_preds] + epitope_preds_at_diff_thresh[first_indice_above:]
             
                 #create initial figure
                 fig = go.Figure()
-                bar_fig = px.bar(df, x="SeqPos", y="BP3EpiProbScore", hover_data=["Residue", "Accession"], title= f"BepiPred-3.0 epitope scores on {acc}", color="BP3EpiProbScore", labels={'BP3EpiProbScore':'BepiPred-3.0 epitope score', "SeqPos": "Sequence position"}, height=700)
+                bar_fig = px.bar(df, x="SeqPos", y="BP3EpiProbScore", hover_data=["Residue", "Accession"], title= plot_title, color="BP3EpiProbScore", labels={'BP3EpiProbScore':'BepiPred-3.0 epitope score', "SeqPos": "Sequence position"}, height=700)
                 stored_coloraxis_info = bar_fig.layout.coloraxis
                 fig.add_trace(bar_fig.data[0])
                 fig.add_trace(go.Scatter(x=x_data, y=y_init, mode="lines", line_color="#2C596A", line={"dash":"dash"}, showlegend=False))
                 fig.add_annotation(text=f"<b>{init_threshold_epitope_preds}</b>", align='left', showarrow=False, xref='paper', yref='paper', x=0.0, y=y_coord, bgcolor="#F9C68F", font_family='Courier New, monospace', bordercolor = "#2C596A")
-                fig.update_layout(margin=dict(b=figure_height_update), title=f"BepiPred-3.0 epitope scores on {acc}", xaxis_title="Sequence position", yaxis_title="BepiPred-3.0 epitope score", coloraxis = stored_coloraxis_info, height=700)
+                fig.update_layout(margin=dict(b=figure_height_update), title=plot_title, xaxis_title="Sequence position", yaxis_title="BepiPred-3.0 epitope score", coloraxis = stored_coloraxis_info, height=700)
                 
                 #only create x number of interactive figures due file size constraints.
                 if len(interactive_figure_list) < num_interactive_figs:
@@ -628,7 +637,7 @@ class BP3EnsemblePredict():
                     #update figure with all the frames
                     figa = go.Figure(data=fig.data, frames=frames, layout=fig.layout)
                     #create threshold sliders
-                    figa.update_layout(height=700, title=f"BepiPred-3.0 epitope scores on {acc}", xaxis_title="Sequence position", yaxis_title="BepiPred-3.0 epitope score", coloraxis = stored_coloraxis_info)
+                    figa.update_layout(height=700, title=plot_title, xaxis_title="Sequence position", yaxis_title="BepiPred-3.0 epitope score", coloraxis = stored_coloraxis_info)
                     figa.update_layout(
                         sliders=[
                             {
