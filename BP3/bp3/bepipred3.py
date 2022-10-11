@@ -16,7 +16,6 @@ import pandas as pd
 ROOT_DIR = Path( Path(__file__).parent.resolve() )
 MODELS_PATH = ROOT_DIR / "BP3Models"
 ESM_SCRIPT_PATH = ROOT_DIR / "extract.py"
-ESM_LOCAL_SCRIPT_PATH = ROOT_DIR / "extract_local.py"
 
 ### SET GPU OR CPU ###
 if torch.cuda.is_available():
@@ -28,11 +27,12 @@ else:
 
 ### MODEL ###
 
+
 class MyDenseNetWithSeqLen(nn.Module):
     def __init__(self,
                  esm_embedding_size = 1281,
-                 fc1_size = 180,
-                 fc2_size = 90,
+                 fc1_size = 150,
+                 fc2_size = 120,
                  fc3_size = 45,
                  fc1_dropout = 0.7,
                  fc2_dropout = 0.7,
@@ -71,8 +71,8 @@ class MyDenseNetWithSeqLen(nn.Module):
 class MyDenseNet(nn.Module):
     def __init__(self,
                  esm_embedding_size = 1280,
-                 fc1_size = 180,
-                 fc2_size = 90,
+                 fc1_size = 150,
+                 fc2_size = 120,
                  fc3_size = 45,
                  fc1_dropout = 0.7,
                  fc2_dropout = 0.7,
@@ -111,7 +111,7 @@ class MyDenseNet(nn.Module):
 ### CLASSES ###
 
 class Antigens():
-    def __init__(self, fasta_file, esm1b_encoding_dir,
+    def __init__(self, fasta_file, esm_encoding_dir,
         add_seq_len=False, run_esm_model_local=None):
         """
         Initialize Antigens class object
@@ -119,26 +119,26 @@ class Antigens():
             device: pytorch device to use, default is cuda if available else cpu.
         """
 
-        self.esm1b_encoding_dir = esm1b_encoding_dir
+        self.esm_encoding_dir = esm_encoding_dir
         self.run_esm_model_local = run_esm_model_local
 
         try:
-            esm1b_encoding_dir.mkdir(parents=True, exist_ok=False)
+            esm_encoding_dir.mkdir(parents=True, exist_ok=False)
         except FileExistsError:
-            print("Directory for ESM1b encodings already there. Saving encodings there.")
+            print("Directory for esm encodings already there. Saving encodings there.")
         else:
-            print("Directory for ESM1b encodings not found. Made new one.")
+            print("Directory for esm encodings not found. Made new one.")
 
         self.accs, self.seqs = self.read_accs_and_sequences_from_fasta(fasta_file)
         num_of_seqs = len(self.seqs)
-        self.create_fasta_for_ESM1b_transformer()
+        self.create_fasta_for_esm_transformer()
         print(f"Number of sequences detected in fasta file: {num_of_seqs}")
-        print("ESM-1b encoding sequences...")
-        #call ESM-1b transformer script here!
-        self.call_esm1b_script()
-#        ESM1b_main.ESM1b_encode_fasta_file(self.esm1b_encoding_dir)
+        print("ESM-2 encoding sequences...")
+        #call ESM-2 transformer script here!
+        self.call_esm_script()
+#        esm_main.esm_encode_fasta_file(self.esm_encoding_dir)
         self.add_seq_len = add_seq_len
-        self.esm1b_encodings = self.prepare_ESM_1b_data()
+        self.esm_encodings = self.prepare_esm_data()
         self.ensemble_preds = None
         self.ensemble_probs = None
 
@@ -154,24 +154,24 @@ class Antigens():
             if not check:
                 sys.exit(f"Nonstandard amino acid character detected in acc: {acc}. Allowed character lower and uppercase amino acids:\n{accepted_AAs}")
 
-    def call_esm1b_script(self):
-        fastaPath = self.esm1b_encoding_dir / "antigens.fasta"
+    def call_esm_script(self):
+        fastaPath = self.esm_encoding_dir / "antigens.fasta"
         
         try: #only using this for biolib implementation 
             if self.run_esm_model_local is not None:
                 if self.run_esm_model_local.is_file():
-                    subprocess.check_call(['python', ESM_LOCAL_SCRIPT_PATH, self.run_esm_model_local, fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
+                    subprocess.check_call(['python', ESM_SCRIPT_PATH, self.run_esm_model_local, fastaPath, self.esm_encoding_dir, "--include", "per_tok"])
                 else:
                     sys.exit(f"Could not find local model: {self.run_esm_model_local}.")
             else:
-                subprocess.check_call(['python', ESM_SCRIPT_PATH, "esm1b_t33_650M_UR50S", fastaPath, self.esm1b_encoding_dir, "--include", "per_tok", "--truncate"])
+                subprocess.check_call(['python', ESM_SCRIPT_PATH, "esm2_t33_650M_UR50D", fastaPath, self.esm_encoding_dir, "--include", "per_tok"])
         except subprocess.CalledProcessError as error:
-            sys.exit(f"ESM-1b model could not be run with following error message: {error}.\nThis is likely a memory issue.")
+            sys.exit(f"ESM model could not be run with following error message: {error}.\nThis is likely a memory issue.")
 
 
-    def create_fasta_for_ESM1b_transformer(self):
+    def create_fasta_for_esm_transformer(self):
         """
-        Outputs fasta file accesions and sequences into a fasta file format, that can be read by ESM-1b transformer.  
+        Outputs fasta file accesions and sequences into a fasta file format, that can be read by ESM-2 transformer.  
         """
         uppercase_entries = list()
         #convert all sequences to uppercase
@@ -184,7 +184,7 @@ class Antigens():
             uppercase_entries.append( (acc, upper_case_sequence) )
 
 
-        with open(self.esm1b_encoding_dir / "antigens.fasta", "w") as outfile:
+        with open(self.esm_encoding_dir / "antigens.fasta", "w") as outfile:
             output = str()
             for entry in uppercase_entries :
                 output += f">{entry[0]}\n{entry[1]}\n"
@@ -234,13 +234,13 @@ class Antigens():
         if accs == False or sequences == False:
             sys.exit(f"No accessions or sequences found in fasta file. Please check file: {infile}")
 
-        #check if there are characters that are not accepted by the ESM-1b transformer.
+        #check if there are characters that are not accepted by the ESM-2 transformer.
         self.check_accepted_AAs(accs, sequences)
 
         return accs, sequences
                 
     def add_seq_len_feature(self, X):
-        #adding sequence length to each positional ESM-1b embedding
+        #adding sequence length to each positional ESM-2 embedding
         seq_len = X.size()[0]
         seq_len_v = torch.ones(seq_len)*seq_len
         seq_len_v = seq_len_v.unsqueeze(dim=1)
@@ -248,11 +248,11 @@ class Antigens():
         
         return new_X
 
-    def prepare_ESM_1b_data(self):
+    def prepare_esm_data(self):
         
         esm_representations = list()
         for acc in self.accs:
-            esm_encoded_acc = torch.load(self.esm1b_encoding_dir / f"{acc}.pt")
+            esm_encoded_acc = torch.load(self.esm_encoding_dir / f"{acc}.pt")
             esm_representation = esm_encoded_acc["representations"][33]
             
             if self.add_seq_len:
@@ -269,7 +269,8 @@ class BP3EnsemblePredict():
     def __init__(self,
                  antigens,
                  device = None,
-                 classification_thresholds=None):
+                 classification_thresholds=None,
+                 rolling_window_size = 9):
         """
         Inputs and initialization:
             antigens: Antigens class object
@@ -285,6 +286,7 @@ class BP3EnsemblePredict():
         
         self.bp3_ensemble_run = False
         self.antigens = antigens
+        self.rolling_window_size = rolling_window_size 
         
         if device is None:
             self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -295,27 +297,33 @@ class BP3EnsemblePredict():
             self.model_architecture = MyDenseNetWithSeqLen()
             m_path = MODELS_PATH / "BP3C50IDSeqLenFFNN" 
             self.model_states = list( m_path.glob("*Fold*") )
-            self.classification_thresholds = {'Fold1': 0.17448979591836736,
-                                              'Fold2': 0.17448979591836736,
+            self.classification_thresholds = {'Fold1': 0.21326530612244898,
+                                              'Fold2': 0.15510204081632653,
                                               'Fold3': 0.1163265306122449,
-                                              'Fold4': 0.1357142857142857,
-                                              'Fold5': 0.15510204081632653}
-            self.threshold_keys = [model_state.stem.split("_")[1] for model_state in self.model_states] 
+                                              'Fold4': 0.09693877551020408,
+                                              'Fold5': 0.19387755102040816}
+            self.threshold_keys = [model_state.stem for model_state in self.model_states] 
 
         else:
             self.model_architecture = MyDenseNet()
             m_path = MODELS_PATH / "BP3C50IDFFNN" 
             self.model_states = list( m_path.glob("*Fold*") )
-            self.classification_thresholds = {'Fold1': 0.17448979591836736,
-                                              'Fold2': 0.1357142857142857,
-                                              'Fold3': 0.15510204081632653,
-                                              'Fold4': 0.1357142857142857,
-                                              'Fold5': 0.15510204081632653}
-            self.threshold_keys = [model_state.stem.split("_")[1] for model_state in self.model_states] 
+            self.classification_thresholds = {'Fold1': 0.2326530612244898,
+                                              'Fold2': 0.15510204081632653,
+                                              'Fold3': 0.1163265306122449,
+                                              'Fold4': 0.15510204081632653,
+                                              'Fold5': 0.19387755102040816}
+            self.threshold_keys = [model_state.stem for model_state in self.model_states] 
 
         #user specified classification thresholds for each fold
         if classification_thresholds != None:
             self.classification_thresholds = classification_thresholds
+
+
+    def compute_rolling_mean_on_bp3_prob_outputs(self, antigen_avg_ensemble_probs):
+        #same=ensures that the rolling mean output will have the same length as the number of residues for antigen.
+        antigen_avg_ensemble_probs = antigen_avg_ensemble_probs.cpu().detach().numpy()
+        return np.convolve(antigen_avg_ensemble_probs, np.ones(self.rolling_window_size), 'same') / self.rolling_window_size
 
     def run_bp3_ensemble(self):
         """
@@ -330,13 +338,13 @@ class BP3EnsemblePredict():
         threshold_keys = list()
         softmax_function = nn.Softmax(dim=1)
         model = self.model_architecture
-        data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.esm1b_encodings) )
+        data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.esm_encodings) )
             
-        for acc, seq, esm1b_encoding in data:
+        for acc, seq, esm_encoding in data:
             ensemble_prob = list()
             all_model_preds = list()
             num_residues = len(seq)
-            esm1b_encoding = torch.unsqueeze(esm1b_encoding, 0).to(self.device)
+            esm_encoding = torch.unsqueeze(esm_encoding, 0).to(self.device)
             
             for i in range(num_of_models):
                 with torch.no_grad():
@@ -345,11 +353,14 @@ class BP3EnsemblePredict():
                     model.load_state_dict(torch.load(model_state, map_location=self.device))
                     model = model.to(self.device)
                     model.eval()
-                    model_output = model(esm1b_encoding)
+                    model_output = model(esm_encoding)
                     model_probs = softmax_function(model_output)[:, 1]
+
                     ensemble_prob.append(model_probs)
 
+
             ensemble_probs.append(ensemble_prob)
+
         
         self.bp3_ensemble_run = True
         self.antigens.ensemble_probs = ensemble_probs
@@ -369,17 +380,19 @@ class BP3EnsemblePredict():
             data = list( zip(self.antigens.accs, self.antigens.seqs, self.antigens.ensemble_probs) )
             combined_csv_format = str()
             outfile_content = str()
-            combined_csv_format += "Accession,Residue,BepiPred-3.0 score"
+            combined_csv_format += "Accession,Residue,BepiPred-3.0 score,BepiPred-3.0 rolling mean score"
 
             for acc, seq, ensemble_prob in data:
                 num_residues  = len(seq)
                 avg_prob = torch.mean(torch.stack(ensemble_prob, axis=1), axis=1)
+                #avg_prob = np.mean(np.stack(ensemble_prob, axis=1), axis=1)
+                avg_prob_rolling_mean = self.compute_rolling_mean_on_bp3_prob_outputs(avg_prob) 
                 ensemble_pred_len = len(avg_prob)
 
                 if ensemble_pred_len < num_residues:
-                    print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
+                    print(f"Sequence longer than what the ESM-2 trasnformer can encode entirely, {acc}. Outputting predictions up till {ensemble_pred_len} position.")
 
-                csv_format = [f"{acc},{seq[i]},{avg_prob[i]}" for i in range(ensemble_pred_len)]
+                csv_format = [f"{acc},{seq[i]},{avg_prob[i]}, {avg_prob_rolling_mean[i]}" for i in range(ensemble_pred_len)]
                 csv_format = "\n".join(csv_format)
                 combined_csv_format += f"\n{csv_format}"
 
@@ -420,12 +433,13 @@ class BP3EnsemblePredict():
             for acc, seq, ensemble_prob in data:
                 all_model_preds = list()
                 num_residues = len(seq)
+                #avg_prob = np.mean(np.stack(ensemble_prob, axis=1), axis=1)
                 avg_prob = torch.mean(torch.stack(ensemble_prob, axis=1), axis=1)
                 ensemble_pred = [1 if res >= var_threshold else 0 for res in avg_prob]
 
                 ensemble_pred_len = len(ensemble_pred)
                 if ensemble_pred_len < num_residues:
-                    print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
+                    print(f"Sequence longer than what the ESM-2 trasnformer can encode entirely, {acc}. Outputting predictions up till {ensemble_pred_len} position.")
 
                 epitope_preds = "".join([seq[i].upper() if ensemble_pred[i] == 1 else seq[i].lower() for i in range( ensemble_pred_len )])
                 outfile_content += f">{acc}\n{epitope_preds}\n"
@@ -473,7 +487,7 @@ class BP3EnsemblePredict():
                 ensemble_pred_len = np.shape(ensemble_pred)[1]
 
                 if ensemble_pred_len < num_residues:
-                    print(f"Sequence longer than 1024 detected, {acc}. The ESM-1b transformer cannot encode such long sequences entirely. Outputting predictions up till {ensemble_pred_len} position.")
+                    print(f"Sequence longer than what the ESM-2 trasnformer can encode entirely, {acc}. Outputting predictions up till {ensemble_pred_len} position.")
                 
                 ensemble_pred = [np.argmax( np.bincount(ensemble_pred[:, i]) ) for i in range(ensemble_pred_len)]
                 epitope_preds = "".join([seq[i].upper() if ensemble_pred[i] == 1 else seq[i].lower() for i in range( len(ensemble_pred) )])
@@ -544,7 +558,7 @@ class BP3EnsemblePredict():
         return html_file_content
     
     
-    def bp3_generate_plots(self, outfile_path, var_threshold=0.1512, num_interactive_figs=30):
+    def bp3_generate_plots(self, outfile_path, var_threshold=0.1512, num_interactive_figs=30, use_rolling_mean=False):
         try:
             outfile_path.mkdir(parents=True, exist_ok=False)
         except FileExistsError:
@@ -571,14 +585,26 @@ class BP3EnsemblePredict():
 
                 epitope_preds_at_diff_thresh = list()
                 seq_len  = len(seq)
-                avg_prob = np.round(torch.mean(torch.stack(ensemble_prob, axis=1), axis=1).cpu().detach().numpy(), decimals=5)
+                avg_prob = torch.mean(torch.stack(ensemble_prob, axis=1), axis=1)
+                
+                if use_rolling_mean and seq_len >= self.rolling_window_size:
+                    avg_prob = self.compute_rolling_mean_on_bp3_prob_outputs(avg_prob)
+                    plot_title = f"BepiPred-3.0 rolling mean epitope scores on {self.add_line_breaks(acc)}"
+
+                else:
+                    avg_prob = avg_prob.cpu().detach().numpy()
+                    plot_title = f"BepiPred-3.0 epitope scores on {self.add_line_breaks(acc)}"
+                    
+                    if use_rolling_mean:
+                        plot_title += ".<br>Sequence was too short for rolling mean."
+
+
+                #compute rolling mean here
+                
                 ensemble_pred_len = len(avg_prob)
 
                 if ensemble_pred_len < seq_len:
-                    plot_title = f"BepiPred-3.0 epitope scores on {self.add_line_breaks(acc)}.<br>The sequence was too long and predictions are truncated to the first 1024 residues."
-
-                else:
-                    plot_title = f"BepiPred-3.0 epitope scores on {self.add_line_breaks(acc)}"
+                    plot_title += f".<br>Sequence too long. Predictions are truncated to the first {ensemble_pred_len} residues."                    
                 
                 res_counts = [i for i in range(1, ensemble_pred_len + 1)]
                 residues =  [seq[i] for i in range(ensemble_pred_len)]

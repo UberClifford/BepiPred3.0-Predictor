@@ -9,7 +9,7 @@ import pathlib
 
 import torch
 
-from esm import Alphabet, FastaBatchedDataset, ProteinBertModel, pretrained
+from esm import Alphabet, FastaBatchedDataset, ProteinBertModel, pretrained, MSATransformer
 
 
 def create_parser():
@@ -50,9 +50,10 @@ def create_parser():
         required=True,
     )
     parser.add_argument(
-        "--truncate",
-        action="store_true",
-        help="Truncate sequences longer than 1024 to match the training setup",
+        "--truncation_seq_length",
+        type=int,
+        default=1022,
+        help="truncate sequences longer than the given value",
     )
 
     parser.add_argument("--nogpu", action="store_true", help="Do not use GPU even if available")
@@ -62,6 +63,10 @@ def create_parser():
 def main(args):
     model, alphabet = pretrained.load_model_and_alphabet(args.model_location)
     model.eval()
+    if isinstance(model, MSATransformer):
+        raise ValueError(
+            "This script currently does not handle models with MSA input (MSA Transformer)."
+        )
     if torch.cuda.is_available() and not args.nogpu:
         model = model.cuda()
         print("Transferred model to GPU")
@@ -69,7 +74,7 @@ def main(args):
     dataset = FastaBatchedDataset.from_file(args.fasta_file)
     batches = dataset.get_batch_indices(args.toks_per_batch, extra_toks_per_seq=1)
     data_loader = torch.utils.data.DataLoader(
-        dataset, collate_fn=alphabet.get_batch_converter(), batch_sampler=batches
+        dataset, collate_fn=alphabet.get_batch_converter(args.truncation_seq_length), batch_sampler=batches
     )
     print(f"Read {args.fasta_file} with {len(dataset)} sequences")
 
@@ -86,11 +91,6 @@ def main(args):
             )
             if torch.cuda.is_available() and not args.nogpu:
                 toks = toks.to(device="cuda", non_blocking=True)
-
-            # The model is trained on truncated sequences and passing longer ones in at
-            # infernce will cause an error. See https://github.com/facebookresearch/esm/issues/21
-            if args.truncate:
-                toks = toks[:, :1022]
 
             out = model(toks, repr_layers=repr_layers, return_contacts=return_contacts)
 
