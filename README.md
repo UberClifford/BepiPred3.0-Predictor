@@ -1,5 +1,5 @@
 # BepiPred3.0-Predictor
-BepiPred3.0 predicts B-cell epitopes from ESM1-b encodings of proteins sequences. You can you this github to setup for local installment of BepiPred-3.0.
+BepiPred3.0 predicts B-cell epitopes from ESM-2 encodings of proteins sequences. You can you this github to setup for local installment of BepiPred-3.0.
 We also provide BepiPred-3.0 is also provided as a [web service](https://biolib.com/DTU/BepiPred-3/)
 ## Usage
 ### Set up
@@ -18,8 +18,8 @@ An example of a command from bash command line
 ```bash
 python bepipred3_CLI.py -i ./example_antigens/example_antigens.fasta -o ./example_output/ -pred vt_pred -t 0.17 
 ```
-This will ESM-1b encode sequences antigens.fasta, make B-cell epitope predictions at a threshold of 0.17, and store it as a fasta file in example_output.
-Two ensemble models are provided, one that only uses positional ESM-1b encoding and one that also includes the sequence lengths. 
+This will ESM-2 encode sequences antigens.fasta, make B-cell epitope predictions at a threshold of 0.17, and store it as a fasta file in example_output.
+Two ensemble models are provided, one that only uses positional ESM-2 encoding and one that also includes the sequence lengths. 
 The average ensemble probability scores are also outputted in  raw_output.CSV file.
 Also a fasta file with top x epitope candidate residues is outputted (by default top 10)
 
