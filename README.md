@@ -1,6 +1,6 @@
 # BepiPred3.0-Predictor
 BepiPred3.0 predicts B-cell epitopes from ESM-2 encodings of proteins sequences. You can you this github to setup for local installment of BepiPred-3.0.
-We also provide BepiPred-3.0 is also provided as a [web service](https://biolib.com/DTU/BepiPred-3/)
+We also provide BepiPred-3.0 is also provided as a [web service](https://services.healthtech.dtu.dk/service.php?BepiPred-3.0)
 ## Usage
 ### Set up
 The dependencies for the BepiPred-3.0 are listed in requirements.txt. These dependencies can be installed with pip. We used a python version 3.8.8. Other python versions may or may not be compatable with the packages listed in requirements.txt. It is recommended that you install the dependencies in a virtual environment. 
