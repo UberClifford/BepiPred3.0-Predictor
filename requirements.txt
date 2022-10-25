@@ -1,6 +1,5 @@
 bp3==0.0.11
-#latest esm1b version from github
-git+https://github.com/facebookresearch/esm.git
+fair-esm==1.0.3
 importlib-resources==5.8.0
 numpy==1.20.2
 pandas==1.4.3
