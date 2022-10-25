@@ -18,7 +18,7 @@ An example of a command from bash command line
 ```bash
 python bepipred3_CLI.py -i ./example_antigens/example_antigens.fasta -o ./example_output/ -pred vt_pred -t 0.17 
 ```
-This will ESM-2 encode sequences antigens.fasta, make B-cell epitope predictions at a threshold of 0.17, and store it as a fasta file in example_output.
+This will ESM-2 encode sequences example_antigens.fasta, make B-cell epitope predictions at a threshold of 0.17, and store it as a fasta file in example_output.
 Two ensemble models are provided, one that only uses positional ESM-2 encoding and one that also includes the sequence lengths. 
 The average ensemble probability scores are also outputted in  raw_output.CSV file.
 Also a fasta file with top x epitope candidate residues is outputted (by default top 10)
