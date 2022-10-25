@@ -8,7 +8,7 @@ WORK_DIR = Path( Path(__file__).parent.resolve() )
 ### COMMAND LINE ARGUMENTS ###
 parser = argparse.ArgumentParser("Make B-cell epitope predictions from fasta file.")
 parser.add_argument("-i", required=True, action="store", dest="fasta_file", type=Path, help="Fasta file contianing antigens")
-parser.add_argument("-o", required=True, action="store", dest="out_dir", type=Path, help="Output file to store B-cell epitope predictions.")
+parser.add_argument("-o", required=True, action="store", dest="out_dir", type=Path, help="Output directory to store B-cell epitope predictions.")
 parser.add_argument("-pred", action="store", choices=["mjv_pred", "vt_pred"], required=True, dest="pred", help="Majorty vote ensemble prediction or\
 	variable threshold predicition on average ensemble posistive probabilities. ")
 parser.add_argument("-add_seq_len", action="store_true", dest="add_seq_len", help="Add sequence lengths to esm-encodings. Default is false.")
@@ -34,7 +34,7 @@ use_rolling_mean = args.use_rolling_mean
 ## Load antigen input and create ESM-2 encodings ## 
 
 #on webservices, we have the esm2 model stored locally. To work you need both esm2_t33_650M_UR50D.pt and the esm2_t33_650M_UR50D-contact-regression.pt stored in same directory
-#MyAntigens = bepipred3.Antigens(fasta_file, esm_dir, add_seq_len=add_seq_len, run_esm_model_local=WORK_DIR / "esm2_t33_650M_UR50D.pt")
+#MyAntigens = bepipred3.Antigens(fasta_file, esm_dir, add_seq_len=add_seq_len, run_esm_model_local=WORK_DIR / "models" / "esm2_t33_650M_UR50D.pt")
 
 MyAntigens = bepipred3.Antigens(fasta_file, esm_dir, add_seq_len=add_seq_len)
 MyBP3EnsemblePredict = bepipred3.BP3EnsemblePredict(MyAntigens, rolling_window_size=rolling_window_size)
