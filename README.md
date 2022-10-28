@@ -14,6 +14,10 @@ A commandline script for most general use cases is provided. It takes a fasta fi
 >7lj4_B
 ...QQaQRELK..
 ```
+
+<b>Inputs<\b>
+
+
 An example of a command from bash command line
 ```bash
 python bepipred3_CLI.py -i ./example_antigens/example_antigens.fasta -o ./example_output/ -pred vt_pred -t 0.17 
