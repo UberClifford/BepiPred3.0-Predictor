@@ -31,7 +31,7 @@ Optional arguments are:
 
 
 * -add_seq_len          Add sequence lengths to esm-encodings. Default is false.
-* - esm_dir ESM_DIR      Directory to save esm encodings to. Default is current working directory.
+* -esm_dir ESM_DIR      Directory to save esm encodings to. Default is current working directory.
 * -t VAR_THRESHOLD      Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.1512.
 * -top TOP_CANDS        Number of top candidates to display in top candidate residue output file. Default is 10.
 * -rolling_window_size  Window size to use for rolling average on B-cell epitope probability scores. Default is 9.
