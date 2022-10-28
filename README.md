@@ -64,13 +64,13 @@ The threshold can be set by using the slider, which moves a dashed line along th
 Epitope predictions are updated according to the slider.
 The B-cell epitope predictions at the set threshold can be downloaded by clicking the button 'Download epitope prediction'.
 
-[!Screenshot](GraphOutput.png)
+![Screenshot](GraphOutput.png)
 
 ### Graph output with sequential smoothing (linear B-cell epitope prediction)
 If you chose to use the sequential smoothing (rolling mean) option, the graphical output will look different.
 Using this option is more useful for detecting linear epitopes. But it is important to note, that some residues in the predicted linear epitope
 are false positives, meaning that they do not interact directly with an antibody. This is because BepiPred-3.0 is trained on PDB crystal structures of ab-ag complexes, and to predict antigen residues that are in contact with an antibody (within 4 angstrom).
-[!Screenshot](GraphOutputWSeqSmooth.png)
+![Screenshot](GraphOutputWSeqSmooth.png)
 
 ### Cite
 If you found BepiPred-3.0 useful in your research, please cite,
