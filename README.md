@@ -56,8 +56,6 @@ python bepipred3_CLI.py -h
 
 ### Graphical Output: Linear and discontinous B-cell epitope prediction
 
-![Screenshot](example_interactive_plot.png)	
-In the interface for 'output_interactive_figures.html', the x and y axis are protein sequence positions and BepiPred-3.0 epitope scores. Residues with a higher score are more likely to be part of a B-cell epitope. The threshold can be set by using the slider bar, which moves a dashed line along the y-axis. Epitope predictions are updated accordingly, and B-cell epitope predictions at the set threshold can be downloaded by clicking the button ‘Download epitope prediction’.
 
 ### Cite
 If you found BepiPred-3.0 useful in your research, please cite,
