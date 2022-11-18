@@ -2,9 +2,9 @@ biolib_version: 2
 
 modules:
     main:
-        image: 'local-docker://uberclifford/bepipred-3.0-biolib_v15:latest'
+        image: 'local-docker://uberclifford/bepipred-3.0-biolib_v18:latest'
         command: 
-            python3 bepipred3_CLI.py
+            python3 bepipred3_CLI.py -o output_directory -pred vt_pred -add_seq_len 
         working_directory: /
         input_files:
             - COPY / /
@@ -32,3 +32,12 @@ arguments:
         key: '-t'
         key_value_separator: ' '
         type: number
+    -
+        default_value: 'No'
+        description: Use sequential smoothing on B-cell epitope probability score graphs. Default is 'No'.
+        key: '-use_rolling_mean'
+        key_value_separator: ' '
+        type: radio
+        options:
+            'Yes': 'Yes'
+            'No': 'No'

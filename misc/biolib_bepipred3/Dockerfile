@@ -7,7 +7,7 @@ RUN rm /etc/apt/sources.list.d/cuda.list && \
 
 #install python and pip package manager
 RUN apt update
-RUN apt install --no-install-recommends python3 python3-pip -y
+RUN apt install --no-install-recommends python3 python3-pip git -y
 RUN apt clean
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -20,5 +20,6 @@ RUN ln -s $(which python3) /usr/bin/python
 
 #copy CLI script and model esm1b model into image
 COPY bepipred3_CLI.py .
-COPY esm_model_state_dict.pt . 
+RUN mkdir /models/
+ADD models /models/
 COPY example_antigens.fasta .
