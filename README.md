@@ -75,4 +75,4 @@ are false positives, meaning that they do not interact directly with an antibody
 ### Cite
 If you found BepiPred-3.0 useful in your research, please cite,
 
-[BepiPred-3.0: Improved B-cell epitope prediction using protein language models](https://www.biorxiv.org/content/10.1101/2022.07.11.499418v1)
+[BepiPred-3.0: Improved B-cell epitope prediction using protein language models](https://doi.org/10.1002/pro.4497)
