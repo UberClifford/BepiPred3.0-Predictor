@@ -2,7 +2,7 @@ biolib_version: 2
 
 modules:
     main:
-        image: 'local-docker://uberclifford/bepipred-3.0-biolib_v18:latest'
+        image: 'local-docker://bepipred3_docker_image_v0:latest'
         command: 
             python3 bepipred3_CLI.py -o output_directory -pred vt_pred -add_seq_len 
         working_directory: /
