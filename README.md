@@ -4,7 +4,7 @@ We also provide BepiPred-3.0 is also provided as a [web service](https://service
 For scientific questions, please contact Joakim Clifford (joacl@dtu.dk or create an issue in the githuyt repository).
 
 ## License
-BepiPred-3.0 is developed by Technical University of Denmark (DTU). The BepiPred-3.0  code and data can be used freely by academic groups for non-commercial purposes. If you plan to use BepiPred-3.0 for any for-profit application, you are required to obtain a separate license (contact Morten Nielsen, morni@dtu.dk).
+BepiPred-3.0 is developed by the Health Tech section at Technical University of Denmark (DTU). The BepiPred-3.0  code and data can be used freely by academic groups for non-commercial purposes. If you plan to use BepiPred-3.0 for any for-profit application, you are required to obtain a separate license (contact Morten Nielsen, morni@dtu.dk).
 
 ## Usage
 ### Set up
