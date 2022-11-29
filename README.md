@@ -1,7 +1,7 @@
 # BepiPred3.0-Predictor
 BepiPred3.0 predicts B-cell epitopes from ESM-2 encodings of proteins sequences. You can you this github to setup for local installment of BepiPred-3.0.
 We also provide BepiPred-3.0 is also provided as a [web service](https://services.healthtech.dtu.dk/service.php?BepiPred-3.0).
-For scientific questions, please contact Joakim Clifford (joacl@dtu.dk or create an issue in the githuyt repository).
+For scientific questions, please contact Joakim Clifford (joacl@dtu.dk or create an issue in the github repository).
 
 ## License
 BepiPred-3.0 is developed by the Health Tech section at Technical University of Denmark (DTU). The BepiPred-3.0  code and data can be used freely by academic groups for non-commercial purposes. If you plan to use BepiPred-3.0 for any for-profit application, you are required to obtain a separate license (contact Morten Nielsen, morni@dtu.dk).
