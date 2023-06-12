@@ -1,2 +1,0 @@
-setuptools
-importlib_resources

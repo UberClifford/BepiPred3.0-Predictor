@@ -38,16 +38,18 @@ Optional arguments are:
 * -add_seq_len          Add sequence lengths to esm-encodings. Default is false.
 * -esm_dir ESM_DIR      Directory to save esm encodings to. Default is current working directory.
 * -t VAR_THRESHOLD      Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.1512.
-* -top TOP_CANDS        Number of top candidates to display in top candidate residue output file. Default is 10.
+* -top TOP_CANDS        Top % candidates to display in top candidate residue output file. Default is 30%.
 * -rolling_window_size  Window size to use for rolling average on B-cell epitope probability scores. Default is 9.
-* -use_rolling_mean     Use rolling mean B-cell epitope probability score for plot. Default is false.
+* -plot_linear_epitope_scores	Use linear B-cell epitope probability scores for plot. Default is false
 
 ### Outputs
-A total of 4 files are generated, where epitope and non-epitope residues are indicated with uppercase and lowercase letters respectively.
-* 'Bcell_epitope_preds.fasta'. Contains B-cell epitope predictions for the protein sequence(s) at the specified threshold is generated.
-* 'Bcell_epitope_top_x_preds.fasta'. Contains the top x residue candidates.
-* 'raw_output.csv'. Contains the B-cell epitope probability scores for each residue of the protein sequence(s). The rolling mean score is also provided.
-* 'output_interactive_figures.html'. The optimal threshold is often protein specific. This html file can be opened in any browser and allows the user to manually set the threshold for each protein and get the the corresponding B-cell epitope predictions. By default, these graphs are generated for the first 40 proteins in the fasta file due to file size contraints.
+A total of 5 files are generated, where epitope and non-epitope residues are indicated with uppercase and lowercase letters respectively.
+
+- 'Bcell_epitope_preds.fasta'. Contains B-cell epitope predictions for the protein sequence(s) at the specified threshold is generated.
+- 'Bcell_epitope_top_Xpct_preds.fasta'. Contains the top x pct. candidates based on BepiPred-3.0 scoring. 
+- 'Bcell_linepitope_top_Xpct_preds' . Contains the top x pct. candidates based on BepiPred-3.0 linear epitope scoring.
+- 'raw_output.csv'. Contains the B-cell epitope probability scores for each residue of the protein sequence(s). The rolling mean score (linear epitope score) is also provided.
+- 'output_interactive_figures.html'. The optimal threshold is often protein specific. This html file can be opened in any browser and allows the user to manually set the threshold for each protein and get the the corresponding B-cell epitope predictions. By default, these graphs are generated for the first 50 proteins in the fasta file due to file size contraints.
 
 ### Example
 

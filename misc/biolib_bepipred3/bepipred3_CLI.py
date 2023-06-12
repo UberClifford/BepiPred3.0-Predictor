@@ -11,10 +11,10 @@ parser.add_argument("-i", required=True, action="store", dest="fasta_file", type
 parser.add_argument("-o", required=True, action="store", dest="out_dir", type=Path, help="Output file to store B-cell epitope predictions.")
 parser.add_argument("-pred", action="store", choices=["mjv_pred", "vt_pred"], required=True, dest="pred", help="Majorty vote ensemble prediction or\
 	variable threshold predicition on average ensemble posistive probabilities. ")
-parser.add_argument("-add_seq_len", action="store_true", dest="add_seq_len", help="Add sequence lengths to esm-encodings. Default is false.")
+parser.add_argument("-add_seq_len", action="store_true", dest="add_seq_len", help="Add sequence lengths to esm-encodings. Default is false. This option is used for the web server.")
 parser.add_argument("-esm_dir", action="store", default= WORK_DIR / "esm_encodings", dest="esm_dir", type=Path, help="Directory to save esm encodings to. Default is current working directory.")
 parser.add_argument("-t", action="store", default=0.1512, type=float, dest="var_threshold", help="Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.15.")
-parser.add_argument("-top", action="store", default=15, type=int, dest="top_cands", help="Number of top candidates to display in top candidate residue output file. Default is 10.")
+parser.add_argument("-top", action="store", default=0.3, type=float, dest="top_cands", help="Top percentage of epitope residues Default is top 30 pct.")
 parser.add_argument("-rolling_window_size", default=9, type=int, dest="rolling_window_size", help="Window size to use for rolling average on B-cell epitope probability scores. Default is 9.")
 #*for biolib*
 #parser.add_argument("-use_rolling_mean", action="store_true", dest="use_rolling_mean", help="Use rolling mean B-cell epitope probability score for plot. Default is false.")
