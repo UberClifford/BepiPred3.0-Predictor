@@ -2,6 +2,7 @@
 from bp3 import bepipred3
 from pathlib import Path
 import argparse
+import zipfile
 
 WORK_DIR = Path( Path(__file__).parent.resolve() )
 
@@ -16,6 +17,7 @@ parser.add_argument("-t", action="store", default=0.1512, type=float, dest="var_
 parser.add_argument("-top", action="store", default=0.3, type=float, dest="top_cands", help="Top percentage of epitope residues Default is top 30 pct.")
 parser.add_argument("-rolling_window_size", default=9, type=int, dest="rolling_window_size", help="Window size to use for rolling average on B-cell epitope probability scores. Default is 9.")
 parser.add_argument("-plot_linear_epitope_scores", action="store_true", dest="plot_linear_epitope_scores", help="Use linear B-cell epitope probability scores for plot. Default is false.")
+parser.add_argument("-z", action="store_true", dest="zip_results", help="Specify option to create zip the bepipred-3.0 results (except the interactive .html figure). Default is false.")
 
 args = parser.parse_args()
 fasta_file = args.fasta_file
@@ -27,6 +29,13 @@ esm_dir = args.esm_dir
 top_cands = args.top_cands
 rolling_window_size = args.rolling_window_size
 plot_linear_epitope_scores = args.plot_linear_epitope_scores
+zip_results = args.zip_results
+
+### FUCNCTIONS ###
+def zip_function(result_files, outfile):
+    zipf = zipfile.ZipFile(outfile, 'w')
+    for result_file in result_files: zipf.write(result_file, arcname=result_file.name)
+    zipf.close()
 
 ### MAIN ###
 
@@ -49,3 +58,10 @@ elif pred == "vt_pred":
 
 #generate plots (generating graphs for a maximum of 40 proteins)
 MyBP3EnsemblePredict.bp3_generate_plots(out_dir, num_interactive_figs=50, use_rolling_mean=plot_linear_epitope_scores)
+
+#zip results
+if zip_results:
+	print("Zipping results")
+	result_files = [f for f in out_dir.glob("*") if f.suffix != ".html"]
+	zip_function(result_files, out_dir / "bepipred3_results.zip")
+	for result_file in result_files: result_file.unlink()
