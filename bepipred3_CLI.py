@@ -47,6 +47,7 @@ def zip_function(result_files, outfile):
 MyAntigens = bepipred3.Antigens(fasta_file, esm_dir, add_seq_len=add_seq_len)
 MyBP3EnsemblePredict = bepipred3.BP3EnsemblePredict(MyAntigens, rolling_window_size=rolling_window_size, top_pred_pct = top_cands)
 MyBP3EnsemblePredict.run_bp3_ensemble()
+
 MyBP3EnsemblePredict.create_toppct_files(out_dir)
 MyBP3EnsemblePredict.create_csvfile(out_dir)
 
