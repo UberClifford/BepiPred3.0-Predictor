@@ -38,7 +38,7 @@ Optional arguments are:
 * -add_seq_len          Add sequence lengths to esm-encodings. Default is false.
 * -esm_dir ESM_DIR      Directory to save esm encodings to. Default is current working directory.
 * -t VAR_THRESHOLD      Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.1512.
-* -top TOP_CANDS        Top % candidates to display in top candidate residue output file. Default is 30%.
+* -top TOP_CANDS        Top % candidates to display in top candidate residue output file. Default is 20%.
 * -rolling_window_size  Window size to use for rolling average on B-cell epitope probability scores. Default is 9.
 * -plot_linear_epitope_scores	Use linear B-cell epitope probability scores for plot. Default is false
 * -z	Specify option to create zip the bepipred-3.0 results (except the interactive .html figure). Default is false.

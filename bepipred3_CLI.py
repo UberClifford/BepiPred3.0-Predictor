@@ -14,7 +14,7 @@ parser.add_argument("-pred", action="store", choices=["mjv_pred", "vt_pred"], re
 parser.add_argument("-add_seq_len", action="store_true", dest="add_seq_len", help="Add sequence lengths to esm-encodings. Default is false. On the web server this option is set to true.")
 parser.add_argument("-esm_dir", action="store", default= WORK_DIR / "esm_encodings", dest="esm_dir", type=Path, help="Directory to save esm encodings to. Default is current working directory.")
 parser.add_argument("-t", action="store", default=0.1512, type=float, dest="var_threshold", help="Threshold to use, when making predictions on average ensemble positive probability outputs. Default is 0.15.")
-parser.add_argument("-top", action="store", default=0.3, type=float, dest="top_cands", help="Top percentage of epitope residues Default is top 30 pct.")
+parser.add_argument("-top", action="store", default=0.2, type=float, dest="top_cands", help="Top percentage of epitope residues Default is top 20 pct.")
 parser.add_argument("-rolling_window_size", default=9, type=int, dest="rolling_window_size", help="Window size to use for rolling average on B-cell epitope probability scores. Default is 9.")
 parser.add_argument("-plot_linear_epitope_scores", action="store_true", dest="plot_linear_epitope_scores", help="Use linear B-cell epitope probability scores for plot. Default is false.")
 parser.add_argument("-z", action="store_true", dest="zip_results", help="Specify option to create zip the bepipred-3.0 results (except the interactive .html figure). Default is false.")
