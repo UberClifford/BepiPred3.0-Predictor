@@ -1,2 +1,0 @@
-include pyproject.toml
-recursive-include bp3 *.pt

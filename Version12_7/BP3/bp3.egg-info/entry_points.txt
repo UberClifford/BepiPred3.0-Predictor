@@ -1,2 +1,0 @@
-[console_scripts]
-resources-example = bp3:main
