@@ -8,7 +8,12 @@ BepiPred-3.0 is developed by the Health Tech section at Technical University of 
 
 ## Usage
 ### Set up
-The dependencies for the BepiPred-3.0 are listed in requirements.txt. These dependencies can be installed with pip. We used the python version 3.8.8. Other python versions may or may not be compatable with the packages listed in requirements.txt. It is recommended that you install the dependencies in a virtual environment. 
+The dependencies for the BepiPred-3.0 are listed in requirements.txt. These dependencies can be installed with pip. We used the **python version 3.8.8**. Other python versions may or may not be compatable with the packages listed in requirements.txt. It is recommended that you install the dependencies in a virtual environment.
+If you are using conda for virtualization you can do,
+```bash
+conda create -n bp3_env python=3.8.8
+```
+And then install packages with pip.
 ```bash
 $ pip3 install -r requirements.txt
 ```
@@ -84,3 +89,4 @@ are false positives, meaning that they do not interact directly with an antibody
 If you found BepiPred-3.0 useful in your research, please cite,
 
 [BepiPred-3.0: Improved B-cell epitope prediction using protein language models](https://doi.org/10.1002/pro.4497)
+
