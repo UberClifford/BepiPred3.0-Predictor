@@ -12,8 +12,9 @@ The dependencies for the BepiPred-3.0 are listed in requirements.txt. These depe
 If you are using conda for virtualization you can do,
 ```bash
 conda create -n bp3_env python=3.8.8
+conda activate bp3_env
 ```
-And then install packages with pip.
+And then install packages in the bp3_env with pip.
 ```bash
 $ pip3 install -r requirements.txt
 ```
@@ -89,4 +90,5 @@ are false positives, meaning that they do not interact directly with an antibody
 If you found BepiPred-3.0 useful in your research, please cite,
 
 [BepiPred-3.0: Improved B-cell epitope prediction using protein language models](https://doi.org/10.1002/pro.4497)
+
 
